@@ -1,0 +1,26 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "5002:5002"
+    depends_on:
+      - mongo
+    environment:
+      - NODE_ENV=production
+      - PORT=5002
+      - MONGO_URI=mongodb+srv://helo:helo123@cluster0.gpsushu.mongodb.net
+      - JWT_SECRET=7a7abb5eca694237bbbb781cf45059b1c6d4853ac84dc3049b06adee0ecab095884263ebcbb5f091f17dafc16382671e534c26082200aaed5081e2ddb93a15ce7f7e142cc60b67b60e71e8fe8ccb74eba9ddfd2852779e8e2234d3282ec5a36cc210b6f8a478445eb27eda8c341d0c3ae4dd174e9e8cb2f65b146b674d1f2020
+      - JWT_EXPIRE=30d
+    volumes:
+      - ./uploads:/app/backend/uploads
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
