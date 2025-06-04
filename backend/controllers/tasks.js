@@ -3,9 +3,6 @@ const User = require("../models/User")
 const fs = require("fs")
 const path = require("path")
 
-// @desc    Get all tasks
-// @route   GET /api/tasks
-// @access  Private
 exports.getTasks = async (req, res) => {
   try {
     const page = Number.parseInt(req.query.page, 10) || 1
@@ -74,9 +71,6 @@ exports.getTasks = async (req, res) => {
   }
 }
 
-// @desc    Get single task
-// @route   GET /api/tasks/:id
-// @access  Private
 exports.getTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
@@ -90,7 +84,6 @@ exports.getTask = async (req, res) => {
       })
     }
 
-    // Check if user is authorized to view this task
     if (
       req.user.role !== "admin" &&
       task.assignedTo._id.toString() !== req.user.id &&
@@ -114,14 +107,10 @@ exports.getTask = async (req, res) => {
   }
 }
 
-// @desc    Create new task
-// @route   POST /api/tasks
-// @access  Private
 exports.createTask = async (req, res) => {
   try {
     const { title, description, status, priority, dueDate, assignedTo } = req.body
 
-    // Check if assigned user exists
     const user = await User.findById(assignedTo)
 
     if (!user) {
@@ -131,7 +120,6 @@ exports.createTask = async (req, res) => {
       })
     }
 
-    // Create task
     const task = new Task({
       title,
       description,
@@ -142,7 +130,6 @@ exports.createTask = async (req, res) => {
       createdBy: req.user.id,
     })
 
-    // Add documents if any
     if (req.files && req.files.length > 0) {
       task.documents = req.files.map((file) => ({
         filename: file.filename,
@@ -155,7 +142,6 @@ exports.createTask = async (req, res) => {
 
     await task.save()
 
-    // Populate user details
     await task.populate("assignedTo", "name email")
     await task.populate("createdBy", "name email")
 
@@ -176,7 +162,6 @@ exports.createTask = async (req, res) => {
 // @access  Private
 exports.updateTask = async (req, res) => {
   try {
-    // Get task
     const task = await Task.findById(req.params.id)
 
     if (!task) {
@@ -186,32 +171,14 @@ exports.updateTask = async (req, res) => {
       })
     }
 
-    // Check if user is authorized to update this task
-    if (
-      req.user.role !== "admin" &&
-      task.assignedTo.toString() !== req.user.id &&
-      task.createdBy.toString() !== req.user.id
-    ) {
+    if (req.user.role !== "admin" && task.createdBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to update this task",
       })
     }
 
-    // Check if assigned user exists
-    if (req.body.assignedTo) {
-      const user = await User.findById(req.body.assignedTo)
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "Assigned user not found",
-        })
-      }
-    }
-
-    // Update task fields
-    const { title, description, status, priority, dueDate, assignedTo, existingDocuments } = req.body
+    const { title, description, status, priority, dueDate, assignedTo } = req.body
 
     if (title) task.title = title
     if (description) task.description = description
@@ -220,21 +187,6 @@ exports.updateTask = async (req, res) => {
     if (dueDate) task.dueDate = dueDate
     if (assignedTo) task.assignedTo = assignedTo
 
-    // Handle documents
-    if (existingDocuments) {
-      // Convert to array if it's a string
-      const existingDocsArray = Array.isArray(existingDocuments) ? existingDocuments : [existingDocuments]
-
-      // Keep only the documents that are in the existingDocuments array
-      task.documents = task.documents.filter((doc) => existingDocsArray.includes(doc._id.toString()))
-    } else if (existingDocuments === undefined) {
-      // If existingDocuments is not provided, keep all existing documents
-    } else {
-      // If existingDocuments is provided as empty, remove all documents
-      task.documents = []
-    }
-
-    // Add new documents if any
     if (req.files && req.files.length > 0) {
       const newDocuments = req.files.map((file) => ({
         filename: file.filename,
@@ -247,10 +199,8 @@ exports.updateTask = async (req, res) => {
       task.documents = [...task.documents, ...newDocuments]
     }
 
-    // Save task
     await task.save()
 
-    // Populate user details
     await task.populate("assignedTo", "name email")
     await task.populate("createdBy", "name email")
 
@@ -271,7 +221,6 @@ exports.updateTask = async (req, res) => {
 // @access  Private
 exports.deleteTask = async (req, res) => {
   try {
-    // Get task
     const task = await Task.findById(req.params.id)
 
     if (!task) {
@@ -281,7 +230,6 @@ exports.deleteTask = async (req, res) => {
       })
     }
 
-    // Check if user is authorized to delete this task
     if (req.user.role !== "admin" && task.createdBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -289,7 +237,6 @@ exports.deleteTask = async (req, res) => {
       })
     }
 
-    // Delete associated documents
     if (task.documents && task.documents.length > 0) {
       task.documents.forEach((doc) => {
         const filePath = path.join(__dirname, "..", doc.path)
@@ -299,7 +246,6 @@ exports.deleteTask = async (req, res) => {
       })
     }
 
-    // Delete task
     await task.remove()
 
     res.status(200).json({
@@ -319,66 +265,61 @@ exports.deleteTask = async (req, res) => {
 // @access  Private
 exports.downloadDocument = async (req, res) => {
   try {
-    console.log(`Download request for taskId: ${req.params.id}, documentId: ${req.params.documentId}`);
+    console.log(`Download request for taskId: ${req.params.id}, documentId: ${req.params.documentId}`)
     
-    // Get task
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findById(req.params.id)
 
     if (!task) {
-      console.log("Task not found");
+      console.log("Task not found")
       return res.status(404).json({
         success: false,
         message: "Task not found",
-      });
+      })
     }
 
-    // Check if user is authorized to access this task
     if (
       req.user.role !== "admin" &&
       task.assignedTo.toString() !== req.user.id &&
       task.createdBy.toString() !== req.user.id
     ) {
-      console.log("Not authorized to access this task");
+      console.log("Not authorized to access this task")
       return res.status(403).json({
         success: false,
         message: "Not authorized to access this task",
-      });
+      })
     }
 
-    // Find document
-    const document = task.documents.id(req.params.documentId);
-    console.log("Document from DB:", JSON.stringify(document));
+    const document = task.documents.id(req.params.documentId)
+    console.log("Document from DB:", JSON.stringify(document))
 
     if (!document) {
-      console.log("Document not found");
+      console.log("Document not found")
       return res.status(404).json({
         success: false,
         message: "Document not found",
-      });
+      })
     }
 
-    // Extract filename from path
-    let filename;
+    let filename
     if (document.path && document.path.includes('/')) {
-      filename = document.path.split('/').pop();
+      filename = document.path.split('/').pop()
     } else if (document.path && document.path.includes('\\')) {
-      filename = document.path.split('\\').pop();
+      filename = document.path.split('\\').pop()
     } else {
-      filename = document.filename; // Fallback to the filename field
+      filename = document.filename
     }
 
-    console.log(`Extracted filename: ${filename}`);
+    console.log(`Extracted filename: ${filename}`)
 
-    // Try multiple paths to find the file
     const possiblePaths = [
       path.resolve(__dirname, "..", document.path),
       path.join(__dirname, "..", document.path),
       path.join(__dirname, "..", "uploads", filename),
       path.resolve(__dirname, "..", "uploads", filename),
-      document.path, // Try the direct path as stored
+      document.path,
       path.join(process.cwd(), document.path),
       path.join(process.cwd(), "backend", "uploads", filename)
-    ];
+    ]
 
     let filePath = null;
     

@@ -2,7 +2,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { logout } from "../redux/slices/authSlice"
-import { Menu, User, LogOut, Bell } from "react-feather"
+import { Menu, User, LogOut} from "react-feather"
 
 const Navbar = ({ toggleSidebar }) => {
   const { user } = useSelector((state) => state.auth)
@@ -37,15 +37,6 @@ const Navbar = ({ toggleSidebar }) => {
               <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{user.name}</span>
             </div>
             <div className="flex items-center gap-3">
-              <button 
-                className="relative p-2 rounded-full bg-light hover:bg-gray-200" 
-                title="Notifications"
-                style={{ transition: 'all var(--transition-fast)' }}
-              >
-                <Bell size={18} color="var(--text-secondary)" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full shadow-sm" 
-                  style={{ boxShadow: '0 0 0 2px white' }}></span>
-              </button>
               <Link 
                 to="/profile" 
                 className={`p-2 rounded-full ${location.pathname === '/profile' 

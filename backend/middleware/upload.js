@@ -10,18 +10,16 @@ if (!fs.existsSync(uploadDir)) {
 
 // Set storage engine
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir)
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "../uploads"))
   },
-  filename: (req, file, cb) => {
-    // Create unique filename with original extension
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`)
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+    cb(null, uniqueSuffix + path.extname(file.originalname))
   },
 })
 
-// Check file type
 const fileFilter = (req, file, cb) => {
-  // Allow PDF only
   if (file.mimetype === "application/pdf") {
     cb(null, true)
   } else {
@@ -32,7 +30,7 @@ const fileFilter = (req, file, cb) => {
 // Initialize upload
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter,
 })
 
@@ -42,7 +40,6 @@ exports.uploadDocuments = upload.array("documents", 3)
 // Error handling middleware for multer
 exports.handleUploadErrors = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    // A Multer error occurred when uploading
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
         success: false,
@@ -60,7 +57,6 @@ exports.handleUploadErrors = (err, req, res, next) => {
       message: err.message,
     })
   } else if (err) {
-    // An unknown error occurred
     return res.status(400).json({
       success: false,
       message: err.message,

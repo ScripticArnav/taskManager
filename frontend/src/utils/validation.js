@@ -1,37 +1,36 @@
 // Email validation
-export const isValidEmail = (email) => {
+export const isEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
 // Password validation (at least 6 characters)
-export const isValidPassword = (password) => {
-  return password && password.length >= 6
+export const isPassword = (password) => {
+  return password.length >= 6
 }
 
 // Required field validation
 export const isRequired = (value) => {
-  return value && value.trim() !== ""
+  return value !== undefined && value !== null && value.trim() !== ""
 }
 
 // File type validation (PDF only)
 export const isPdfFile = (file) => {
-  return file && file.type === "application/pdf"
+  return file.type === "application/pdf"
 }
 
 // File size validation (max 5MB)
 export const isValidFileSize = (file) => {
   const maxSize = 5 * 1024 * 1024 // 5MB
-  return file && file.size <= maxSize
+  return file.size <= maxSize
 }
 
 // Date validation (must be in the future)
 export const isFutureDate = (date) => {
-  if (!date) return false
-  const selectedDate = new Date(date)
+  const inputDate = new Date(date)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  return selectedDate >= today
+  return inputDate >= today
 }
 
 // Form validation for login
@@ -40,7 +39,7 @@ export const validateLoginForm = (formData) => {
 
   if (!isRequired(formData.email)) {
     errors.email = "Email is required"
-  } else if (!isValidEmail(formData.email)) {
+  } else if (!isEmail(formData.email)) {
     errors.email = "Invalid email format"
   }
 
@@ -64,13 +63,13 @@ export const validateRegisterForm = (formData) => {
 
   if (!isRequired(formData.email)) {
     errors.email = "Email is required"
-  } else if (!isValidEmail(formData.email)) {
+  } else if (!isEmail(formData.email)) {
     errors.email = "Invalid email format"
   }
 
   if (!isRequired(formData.password)) {
     errors.password = "Password is required"
-  } else if (!isValidPassword(formData.password)) {
+  } else if (!isPassword(formData.password)) {
     errors.password = "Password must be at least 6 characters"
   }
 
@@ -153,11 +152,11 @@ export const validateUserForm = (formData) => {
 
   if (!isRequired(formData.email)) {
     errors.email = "Email is required"
-  } else if (!isValidEmail(formData.email)) {
+  } else if (!isEmail(formData.email)) {
     errors.email = "Invalid email format"
   }
 
-  if (formData.password && !isValidPassword(formData.password)) {
+  if (formData.password && !isPassword(formData.password)) {
     errors.password = "Password must be at least 6 characters"
   }
 

@@ -28,15 +28,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Static folder for uploads
-app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
-  setHeaders: (res, path) => {
-    // Set appropriate headers for PDF files
-    if (path.endsWith('.pdf')) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'inline');
-    }
-  }
-}))
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // Test endpoint for PDF download
 app.get("/api/test-pdf/:filename", (req, res) => {
@@ -76,11 +68,9 @@ app.use((err, req, res, next) => {
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
-    dbName: 'taskmanager'
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("MongoDB Connected to database: taskmanager")
+    console.log("MongoDB Connected")
 
     // Start server
     const PORT = process.env.PORT || 5002
@@ -89,6 +79,6 @@ mongoose
     })
   })
   .catch((err) => {
-    console.error("MongoDB connection error:", err.message)
+    console.error("MongoDB connection error:", err)
     process.exit(1)
   })
